@@ -151,7 +151,7 @@ function install_gmssl()
 {
     echo "starting install gmssl...."
     cd ~
-    git clone --branch GmSSL-v2 --single-branch git@github.com:guanzhi/GmSSL.git
+    git clone --branch GmSSL-v2 --single-branch https://github.com/guanzhi/GmSSL.git
     cd GmSSL/
     ./config
     make
