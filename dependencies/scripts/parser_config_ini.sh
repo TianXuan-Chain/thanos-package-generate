@@ -270,7 +270,7 @@ function parser_ini()
     #repositoryId=netease-public
 
     # [maven] section
-    local section="maven"
+    local section="maven"    
     #release
     local param="release_url"
     local maven_release_url=$(ini_get $file $section $param)

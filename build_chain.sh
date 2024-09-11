@@ -184,10 +184,11 @@ function build()
     	    local sub_arr=(`eval echo '$'"NODE_INFO_${i}"`)
     	    local public_ip=${sub_arr[0]}
             local private_ip=${sub_arr[1]}
-            local node_num_per_host=${sub_arr[2]}
-            local agency_info=${sub_arr[3]}
+            local listen_ip=${sub_arr[2]}
+            local node_num_per_host=${sub_arr[3]}
+            local agency_info=${sub_arr[4]}
 
-            build_node_installation_package $public_ip $private_ip $node_num_per_host $agency_info $i
+            build_node_installation_package $public_ip $private_ip $listen_ip  $node_num_per_host $agency_info $i
     done
     #create genesis.json
     create_genesis_json ${DEPENDENCIES_TPL_DIR} ${FOLLOW_DIR}
@@ -201,10 +202,11 @@ function build()
     	    local sub_arr=(`eval echo '$'"NODE_INFO_${i}"`)
     	    local public_ip=${sub_arr[0]}
             local private_ip=${sub_arr[1]}
-            local node_num_per_host=${sub_arr[2]}
-            local agency_info=${sub_arr[3]}
+            local listen_ip=${sub_arr[2]}
+            local node_num_per_host=${sub_arr[3]}
+            local agency_info=${sub_arr[4]}
 
-            complete_node_install_package $public_ip $private_ip $node_num_per_host $agency_info $i
+            complete_node_install_package $public_ip $private_ip $listen_ip $node_num_per_host $agency_info $i
     done
 }
 
@@ -230,15 +232,16 @@ function expand()
     	    local sub_arr=(`eval echo '$'"NODE_INFO_${i}"`)
     	    local public_ip=${sub_arr[0]}
             local private_ip=${sub_arr[1]}
-            local node_num_per_host=${sub_arr[2]}
-            local agency_info=${sub_arr[3]}
+            local listen_ip=${sub_arr[2]}
+            local node_num_per_host=${sub_arr[3]}
+            local agency_info=${sub_arr[4]}
 
-            build_node_installation_package $public_ip $private_ip $node_num_per_host $agency_info $i
+            build_node_installation_package $public_ip $private_ip $listen_ip $node_num_per_host $agency_info $i
 
             export CHAIN_PEER_DISCOVERY_IP_LIST=${chain_peer_discovery_ip_list}
             export GATEWAY_BROADCAST_IPLIST=${gateway_peer_rpc_ip_list}
 
-            complete_node_install_package $public_ip $private_ip $node_num_per_host $agency_info $i
+            complete_node_install_package $public_ip $private_ip $listen_ip $node_num_per_host $agency_info $i
     done
 }
 
@@ -247,10 +250,11 @@ function build_node_installation_package()
 {
     local public_ip=$1
     local private_ip=$2
-    local node_num_per_host=$3
-    local agency_info=$4
-    local node_index=$5
-    echo "Building package => p2p_ip=$public_ip ,listen_ip=$private_ip ,node_num=$node_num_per_host ,agent=$agency_info"
+    local listen_ip=$3
+    local node_num_per_host=$4
+    local agency_info=$5
+    local node_index=$6
+    echo "Building package => p2p_ip=$public_ip , private_id=$private_ip listen_ip=$listen_ip ,node_num=$node_num_per_host ,agent=$agency_info"
 
     public_ip_underline=$(replace_dot_with_underline $public_ip)
 
@@ -299,7 +303,7 @@ function build_node_installation_package()
         export CHAIN_VALIDATORS_TPL=${CHAIN_VALIDATORS_TPL}${current_validator_info}
 
         #create thanos-chain.conf and thanos-gateway.conf
-        create_node_config $public_ip $private_ip $entity_index ${DEPENDENCIES_TPL_DIR} ${current_entity_dir} $is_last
+        create_node_config $public_ip $private_ip $listen_ip $entity_index ${DEPENDENCIES_TPL_DIR} ${current_entity_dir} $is_last
 
         #complete nodeAction.ini for registerNode
         local nodeAction_ini_path=$current_entity_dir/nodeAction.ini
@@ -327,9 +331,10 @@ function complete_node_install_package()
 {
     local public_ip=$1
     local private_ip=$2
-    local node_num_per_host=$3
-    local agency_info=$4
-    local node_index=$5
+    local listen_ip=$3
+    local node_num_per_host=$4
+    local agency_info=$5
+    local node_index=$6
 
     public_ip_underline=$(replace_dot_with_underline $public_ip)
 
@@ -366,7 +371,7 @@ function complete_node_install_package()
     #create tar package
     cd $buildPWD
     tar_tool $node_dir_name
-    echo "Build package complete. => p2p_ip=$public_ip ,listen_ip=$private_ip ,node_num=$node_num_per_host ,agent=$agency_info"
+    echo "Build package complete. => p2p_ip=$public_ip, private_ip=$private_ip, listen_ip=$listen_ip ,node_num=$node_num_per_host ,agent=$agency_info"
 }
 
 #create cert for node of the server
@@ -438,10 +443,11 @@ function create_node_config()
 {
     local public_ip=$1
     local private_ip=$2
-    local entity_index=$3
-    local src=$4
-    local dst=$5
-    local is_last=$6
+    local listen_ip=$3
+    local entity_index=$4
+    local src=$5
+    local dst=$6
+    local is_last=$7
 
     #=====create thanos-chain.conf=====
     chain_peer_discovery_port=$((${CHAIN_PEER_DISCOVERY_PORT}+$entity_index))
@@ -449,8 +455,8 @@ function create_node_config()
     chain_listen_gateway_port=$((${CHAIN_LISTEN_GATEWAY_PORT}+$entity_index))
     gateway_listen_chain_port=$((${GATEWAY_LISTEN_CHAIN_PORT}+$entity_index))
 
-    export CHAIN_PEER_RPC_IP_TPL=$public_ip
-    export CHAIN_PEER_BIND_IP_TPL=$private_ip
+    export CHAIN_PEER_RPC_IP_TPL=$private_ip
+    export CHAIN_PEER_BIND_IP_TPL=$listen_ip
 
     export CIPHER_KEY_TPL=${CIPHER_KEY_TYPE}
 
@@ -468,7 +474,7 @@ function create_node_config()
     gateway_peer_rpc_ipport="\""$uuid":"$public_ip":"$((${GATEWAY_PEER_RPC_PORT}+$entity_index))"\""
     export GATEWAY_PEER_RPC_IPPORT_TPL=$gateway_peer_rpc_ipport
     #rpc.address
-    gateway_web3_rpc_address="\""$public_ip":"$((${GATEWAY_WEB3_RPC_PORT}+$entity_index))"\""
+    gateway_web3_rpc_address="\""$private_ip":"$((${GATEWAY_WEB3_RPC_PORT}+$entity_index))"\""
     export GATEWAY_WEB3_RPC_ADDRESS_TPL=$gateway_web3_rpc_address
     #http.port
     gateway_web3_http_port=$((${GATEWAY_WEB3_HTTP_PORT}+$entity_index))
