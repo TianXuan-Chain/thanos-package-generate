@@ -1,4 +1,4 @@
-**天玄一键部署脚本，详细教程见：[快速搭建天玄链](https://netease-blockchain.gitbook.io/thanos-tech-docs/quick-start/depoly-thanos-chain)**
+**天玄一键部署脚本，详细教程见：[快速搭建天玄链](https://tianxuan.blockchain.163.com/quick-start/depoly-tianxaun-chain/)**
 # 使用
 ## 要求
 运行 “节点安装包构建” 脚本需要
